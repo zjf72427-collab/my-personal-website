@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+
+:root {
+  --c: #00f5ff;
+  --p: #ff006e;
+  --a: #7b2fff;
+  --bg: #060c14;
+  --bg2: #0a1520;
+  --bg3: #0f1e34;
+  --t: #eaf4ff;
+  --td: #8aaac8;
+}
+
+.home-page {
+  background: var(--bg);
+  color: var(--t);
+  font-family: 'Noto Sans SC', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--c); }
+
+  .c1 { color: var(--c); }
+  .c2 { color: var(--p); }
+  .c3 { color: var(--a); }
+
+  // Section wrapper
+  .w {
+    position: relative;
+    z-index: 2;
+    padding: 88px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  // Section header
+  .sh {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 50px;
+  }
+  .snum {
+    font-family: 'Orbitron', monospace;
+    font-size: .65rem;
+    color: var(--c);
+    letter-spacing: 2px;
+    opacity: .5;
+  }
+  .stit {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--t);
+    text-shadow: 0 0 20px #00f5ff44;
+  }
+  .sl2 {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--c), transparent);
+    opacity: .2;
+  }
+
+  // Reveal animation
+  .rv {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity .7s, transform .7s;
+    &.on { opacity: 1; transform: none; }
+  }
+
+  // Button
+  .btn {
+    padding: 12px 30px;
+    font-family: 'Orbitron', monospace;
+    font-size: .7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: .12s;
+    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    cursor: pointer;
+    border: none;
+    font-weight: 700;
+    &:hover { transform: translateY(-3px); }
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+      transition: .5s;
+    }
+    &:hover::before { left: 100%; }
+  }
+  .bp { background: var(--c); color: #000; box-shadow: 0 0 20px #00f5ff55; }
+  .bo { background: transparent; color: var(--c); border: 1px solid var(--c); &:hover { background: rgba(0,245,255,.07); } }
+
+  @media (max-width: 768px) {
+    .w { padding: 60px 18px; }
+  }
+}

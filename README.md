@@ -1,104 +1,97 @@
-<img  src="https://www.qiniu.lingchen.kim/github-cover-light6.webp" />
+# 木Z — 个人主页
 
-<br />
-<h1 align="center">Art Design Pro</h1>
-<p align="center">A backend system template that combines design aesthetics with efficient development, helping you quickly build professional-grade applications</p>
-<div align="center">English | <a href="./README.zh-CN.md">简体中文</a></div>
+> 探索 · 创造 · 突破边界
 
-<br />
-<div align="center">
+一个基于 Vue 3 + Vite 构建的赛博朋克风格个人主页，记录技术思考、创作实验与折腾痕迹。
 
-[![license](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE) [![github stars](https://img.shields.io/github/stars/Daymychen/art-design-pro)](https://github.com/Daymychen/art-design-pro/stargazers) [![github forks](https://img.shields.io/github/forks/Daymychen/art-design-pro)](https://github.com/Daymychen/art-design-pro/network/members)
+---
 
-</div>
-<br />
+## 核心功能
 
-## What makes this project special?
+| 模块 | 说明 |
+|------|------|
+| **Hero** | 打字机动效欢迎屏，滚动扫描线背景 |
+| **About** | 角色轮播打字动效，个人简介 |
+| **Skills** | 技术栈可视化展示 |
+| **ContestCard** | 竞赛 / 项目卡片展示 |
+| **GeekSpace** | 算法题解折叠面板 |
+| **HardLab** | 仿终端 UI，VMware / Linux / GNS3 实验记录 |
+| **DigitalGarden** | Markdown 知识库，零依赖自研渲染器 + highlight.js 代码高亮 |
+| **PostsSection** | 博客文章索引 |
+| **GameShowcase** | 独立游戏展示区 |
+| **GuestBook** | 留言本 |
+| **MusicPlayer** | HTML5 音乐播放器（右下角悬浮） |
+| **BgEffects** | Canvas 矩阵雨动态背景 |
+| **BootScreen** | 开机启动动画 |
 
-**Interface Design**: Modern UI design with smooth interactions, focusing on user experience and visual design
+## 技术栈
 
-**Quick Start**: Clean architecture + comprehensive documentation, easy for backend developers to use
+- **框架**: Vue 3 + Vite 7 + TypeScript
+- **路由**: vue-router 4（Hash 模式）
+- **样式**: SCSS + Tailwind CSS 4
+- **UI**: Element Plus（按需自动导入）
+- **状态**: Pinia + @vueuse/core
+- **代码高亮**: highlight.js
+- **自动导入**: unplugin-auto-import（ref / reactive / onMounted 无需手动 import）
+- **Markdown**: 自研零依赖渲染器（`src/views/home/composables/useMarkdown.ts`）
 
-**Rich Components**: Built-in high-quality components for data display, forms, and more to meet different business scenarios
+## 目录结构
 
-**Smooth Interactions**: Button clicks, theme switching, page transitions, chart animations - experience comparable to commercial products
+```
+src/views/home/
+├── index.vue                    # 主页入口
+├── style.scss                   # 全局样式
+├── components/                  # 各功能区块组件
+├── pages/
+│   ├── DigitalGardenPage.vue    # /garden 路由
+│   └── LabPage.vue              # /lab 路由
+├── data/
+│   └── contestProject.ts        # 竞赛项目数据（在此编辑卡片内容）
+├── content/                     # Markdown 内容文件
+│   ├── algorithms.md
+│   ├── cv-paper-01.md
+│   └── communication-circuit.md
+└── composables/
+    └── useMarkdown.ts           # 自研 MD 渲染器
+```
 
-**Efficient Development**: Built-in practical APIs like useTable and ArtForm to significantly improve development efficiency
+## 本地运行
 
-**Clean Scripts**: Built-in one-click cleanup script to quickly remove demo data and get a ready-to-develop base project
-
-## Tech Stack
-
-Development Framework: Vue3, TypeScript, Vite, Element-Plus, Tailwind CSS
-
-Code Standards: Eslint, Prettier, Stylelint, Husky, Lint-staged, cz-git
-
-## Preview
-
-<kbd><img src="https://www.qiniu.lingchen.kim/github-c1.webp" alt="Light Theme"/></kbd>
-
-<kbd><img src="https://www.qiniu.lingchen.kim/github-c2.webp" alt="Light Theme"/></kbd>
-
-<kbd><img src="https://www.qiniu.lingchen.kim/github-c4.webp" alt="Dark Theme"/></kbd>
-
-<kbd><img src="https://www.qiniu.lingchen.kim/github-c5.webp" alt="Dark Theme"/></kbd>
-
-## Quick Access
-
-[Live Demo](https://www.artd.pro) | [Official Documentation](https://www.artd.pro/docs) | [Changelog](./CHANGELOG.en.md)
-
-## Installation & Setup
+**环境要求**: Node.js >= 20.19.0，pnpm >= 8.8.0
 
 ```bash
-# Install dependencies
+# 克隆项目
+git clone https://github.com/zjf72427/my-personal-website.git
+cd my-personal-website
+
+# 安装依赖
 pnpm install
 
-# If pnpm install fails, try using the command below
-pnpm install --ignore-scripts
-
-# Start local development environment
+# 启动开发服务器
 pnpm dev
+```
 
-# Build for production
+```bash
+# 构建生产版本
 pnpm build
 ```
 
-## Clean Version
+## 路由
 
-The project includes a cleanup script to quickly remove demo data and provide developers with a ready-to-develop base project
+| 路径 | 页面 |
+|------|------|
+| `/` | 主页 |
+| `/garden` | 数字花园（知识库） |
+| `/lab` | 实验室 |
 
-```bash
-pnpm clean:dev
-```
+## 主题
 
-## Technical Support
+支持深色 / 浅色双主题切换，偏好持久化至 `localStorage('muz-theme')`。
 
-QQ Group: <a href="https://qm.qq.com/cgi-bin/qm/qr?k=Gg6yzZLFaNgmRhK0T5Qcjf7-XcAFWWXm&jump_from=webapi&authKey=YpRKVJQyFKYbGTiKw0GJ/YQXnNF+GdXNZC5beQQqnGZTvuLlXoMO7nw5fNXvmVhA">1038930070</a> (Click the link to join the group chat)
+## 音乐
 
-## Browser Compatibility
+将 mp3 放至 `public/music/spring-snow.mp3` 即可。
 
-Supports modern mainstream browsers including Chrome, Safari, Firefox, and more.
+---
 
-## Contributing
-
-We sincerely welcome and appreciate the support of every contributor! Whether you have new ideas, feature suggestions, or code optimizations, you can participate in the following ways:
-
-Submit Pull Requests: Share your code and help the project grow.
-
-Create GitHub Issues: Provide bug feedback or new feature suggestions to help us improve together.
-
-Every contribution you make takes this project one step further! Come join our open source community!
-
-## Continuous Optimization & Extension
-
-The project maintains active updates, supports the latest frontend tech stack, is compatible with mainstream frameworks, and ensures long-term stability and extensibility. Community-driven feedback mechanisms allow your needs to be quickly integrated into project iterations.
-
-## Donation
-
-If you feel this project has reduced your development costs and solved problems in your work/life, you can support us through the following ways:
-
-<img src="https://www.qiniu.lingchen.kim/%E7%BB%84%202%402x%202.png" alt="Donation QR Code"/>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Daymychen/art-design-pro&type=Date)](https://www.star-history.com/#Daymychen/art-design-pro&Date)
+© 2026 木Z — All rights reserved &nbsp;·&nbsp; `// SYSTEM v2.0.0`

@@ -30,5 +30,11 @@ declare module 'qrcode.vue' {
   export default QrcodeVue
 }
 
+// .md files imported as raw strings via ?raw suffix
+declare module '*.md?raw' {
+  const content: string
+  export default content
+}
+
 // 全局变量声明
 declare const __APP_VERSION__: string // 版本号
