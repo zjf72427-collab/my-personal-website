@@ -29,6 +29,12 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     component: () => import('@views/home/pages/LabPage.vue'),
     meta: { title: '木Z · 硬核实验室', isHideTab: true }
   },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@views/home/pages/AdminPage.vue'),
+    meta: { title: '木Z · Admin', isHideTab: true, requiresAdminAuth: true }
+  },
   // 不需要登录就能访问的路由示例
   // {
   //   path: '/welcome',

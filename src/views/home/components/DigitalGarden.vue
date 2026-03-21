@@ -53,14 +53,12 @@
 <script setup lang="ts">
 import { renderMarkdown } from '../composables/useMarkdown'
 
-// Import .md files as raw strings via Vite's ?raw suffix
+// 本地 .md 文件作为兜底（离线可用）
 import commRaw from '../content/communication-circuit.md?raw'
 import cvRaw from '../content/cv-paper-01.md?raw'
 import algoRaw from '../content/algorithms.md?raw'
 
-function renderMd(raw: string): string {
-  return renderMarkdown(raw)
-}
+const API = 'http://localhost:3008'
 
 interface Category {
   id: string
@@ -70,10 +68,25 @@ interface Category {
   file: string
   open: boolean
   html: string
+  fromApi?: boolean
 }
 
 function toggle(cat: Category) {
+  // 从 API 加载的条目，展开时再拉取完整内容
+  if (cat.fromApi && cat.open === false && !cat.html) {
+    fetchContent(cat)
+  }
   cat.open = !cat.open
+}
+
+async function fetchContent(cat: Category) {
+  try {
+    const r = await fetch(`${API}/api/articles/${cat.id}`)
+    if (!r.ok) return
+    const data = await r.json()
+    cat.html = renderMarkdown(data.content)
+    cat.file = `DB #${data.id}`
+  } catch {}
 }
 
 const query = ref('')
@@ -86,6 +99,7 @@ interface SearchResult {
   index: number
 }
 
+// 本地静态文件 rawMap（用于搜索兜底）
 const rawMap: Record<string, string> = {
   comm: commRaw,
   cv: cvRaw,
@@ -120,37 +134,58 @@ function openCat(id: string) {
   nextTick(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
 
-const categories = reactive<Category[]>([
+// 内置静态分类（本地 .md 驱动，始终可用）
+const staticCategories: Category[] = [
   {
-    id: 'comm',
-    icon: '📡',
-    name: '通信电子线路',
-    sub: '高频电路 · 调制解调 · 振荡器',
-    file: 'communication-circuit.md',
-    open: false,
-    html: renderMd(commRaw),
+    id: 'comm', icon: '📡', name: '通信电子线路',
+    sub: '高频电路 · 调制解调 · 振荡器', file: 'communication-circuit.md',
+    open: false, html: renderMarkdown(commRaw),
   },
   {
-    id: 'cv',
-    icon: '👁️',
-    name: '计算机视觉 · 论文摘要',
-    sub: 'Transformer · 分割 · 多模态',
-    file: 'cv-paper-01.md',
-    open: false,
-    html: renderMd(cvRaw),
+    id: 'cv', icon: '👁️', name: '计算机视觉 · 论文摘要',
+    sub: 'Transformer · 分割 · 多模态', file: 'cv-paper-01.md',
+    open: false, html: renderMarkdown(cvRaw),
   },
   {
-    id: 'algo',
-    icon: '⚙️',
-    name: '核心算法库',
-    sub: '排序 · 动态规划 · 贪心',
-    file: 'algorithms.md',
-    open: false,
-    html: renderMd(algoRaw),
+    id: 'algo', icon: '⚙️', name: '核心算法库',
+    sub: '排序 · 动态规划 · 贪心', file: 'algorithms.md',
+    open: false, html: renderMarkdown(algoRaw),
   },
-])
+]
+
+const categories = reactive<Category[]>([...staticCategories])
+
+// 从 API 加载笔记，追加到列表（不重复）
+async function loadApiArticles() {
+  try {
+    const r = await fetch(`${API}/api/articles`)
+    if (!r.ok) return
+    const list: { id: number; title: string; category: string; createdAt: string }[] = await r.json()
+    const CATEGORY_ICONS: Record<string, string> = {
+      '通信电子线路': '📡', 'CV论文': '👁️', '底层算法': '⚙️',
+      '网络工程': '🌐', '杂记': '📝',
+    }
+    for (const item of list) {
+      const existsId = `api-${item.id}`
+      if (categories.find(c => c.id === existsId)) continue
+      categories.push({
+        id: existsId,
+        icon: CATEGORY_ICONS[item.category] || '📄',
+        name: item.title,
+        sub: `${item.category} · ${new Date(item.createdAt).toLocaleDateString('zh-CN')}`,
+        file: `DB #${item.id}`,
+        open: false,
+        html: '', // 懒加载：展开时再拉取
+        fromApi: true,
+      })
+    }
+  } catch {
+    // 后端未启动时静默失败，显示本地内容
+  }
+}
 
 onMounted(() => {
+  loadApiArticles()
   const obs = new IntersectionObserver(
     es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('on') }),
     { threshold: .1 }

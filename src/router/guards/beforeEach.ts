@@ -206,6 +206,16 @@ function handleLoginStatus(
   userStore: ReturnType<typeof useUserStore>,
   next: NavigationGuardNext
 ): boolean {
+  // /admin 路由：检查 JWT token，未登录则重定向到登录页
+  if (to.meta?.requiresAdminAuth) {
+    const token = localStorage.getItem('muz-admin-token')
+    if (!token) {
+      next({ path: '/admin' }) // 回到 admin 自身的锁屏页（unlocked=false）
+      return false
+    }
+    return true // token 存在，放行
+  }
+
   // 已登录或访问登录页或静态路由，直接放行
   if (userStore.isLogin || to.path === RoutesAlias.Login || isStaticRoute(to.path)) {
     return true
