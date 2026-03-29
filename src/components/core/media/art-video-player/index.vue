@@ -42,7 +42,7 @@
   // 设置属性默认值
 
   // 播放器实例引用
-  const playerInstance = ref<Player | null>(null)
+  const playerInstance = ref<InstanceType<typeof Player> | null>(null)
 
   // 播放器样式接口定义
   interface VideoPlayerStyle {
@@ -97,7 +97,7 @@
     })
 
     // 错误事件监听器
-    playerInstance.value.on('error', (error) => {
+    playerInstance.value.on('error', (error: unknown) => {
       console.error('Error occurred:', error)
     })
   })

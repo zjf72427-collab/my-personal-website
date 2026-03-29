@@ -1,86 +1,95 @@
 <template>
   <div class="music-player" :class="{ expanded }">
-    <!-- Hidden HTML5 audio element -->
-    <audio ref="audioEl" loop preload="none" @timeupdate="onTimeUpdate" @ended="onEnded">
-      <!-- Put your .mp3 in public/music/spring-snow.mp3 and it will be loaded automatically -->
-      <!-- Or replace the src below with any direct MP3 URL -->
+    <audio
+      ref="audioEl"
+      preload="metadata"
+      loop
+      @loadedmetadata="onLoadedMetadata"
+      @timeupdate="onTimeUpdate"
+      @play="playing = true"
+      @pause="playing = false"
+      @ended="onEnded"
+      @error="onError"
+    >
       <source :src="trackSrc" type="audio/mpeg" />
     </audio>
 
-    <div class="mp-toggle" @click="expanded = !expanded" :title="expanded ? '收起' : '展开播放器'">♫</div>
+    <button
+      type="button"
+      class="mp-toggle"
+      :title="expanded ? '收起播放器' : '展开播放器'"
+      @click.stop="expanded = !expanded"
+    >
+      MUSIC
+    </button>
 
     <div class="mp-body">
       <div class="mp-top">
-        <div class="mp-disc" :class="{ spinning: playing }">🌸</div>
+        <div class="mp-disc" :class="{ spinning: playing }">10CM</div>
         <div class="mp-info">
-          <div class="mp-title">春雪 Spring Snow</div>
-          <div class="mp-artist">10CM</div>
+          <div class="mp-title">Spring Snow</div>
+          <div class="mp-artist">10CM · personal loop</div>
         </div>
         <div class="mp-controls">
-          <button class="mp-btn" @click="togglePlay" :title="playing ? '暂停' : '播放'">
-            {{ playing ? '⏸' : '▶' }}
+          <button type="button" class="mp-btn" :title="playing ? '暂停' : '播放'" @click.stop="togglePlay">
+            {{ playing ? 'PAUSE' : 'PLAY' }}
           </button>
         </div>
       </div>
-      <div class="mp-progress" @click="seek">
-        <div class="mp-bar">
-          <div class="mp-fill" :style="{ width: progressPct + '%' }"></div>
+      <div class="mp-progress" @click.stop="seek">
+        <div ref="progressBarEl" class="mp-bar">
+          <div class="mp-fill" :style="{ width: `${progressPct}%` }"></div>
         </div>
         <div class="mp-times">
           <span>{{ formatTime(currentTime) }}</span>
           <span>{{ formatTime(duration) }}</span>
         </div>
       </div>
-      <div class="mp-hint" v-if="noSrc">// 将 .mp3 放入 public/music/ 即可播放</div>
+      <div class="mp-caption">Late-night coding companion</div>
+      <div v-if="errorMessage" class="mp-hint">{{ errorMessage }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// 音乐文件放置说明：
-// 1. 将你的 .mp3 文件重命名为 spring-snow.mp3
-// 2. 复制到 E:/wz/art-design-pro/public/music/spring-snow.mp3
-// 3. 刷新页面即可播放，无需修改代码
-//
-// 测试用无版权音乐（需联网）：
-// https://www.bensound.com/bensound-music/bensound-sunny.mp3
-
 const trackSrc = '/music/spring-snow.mp3'
 
 const audioEl = ref<HTMLAudioElement | null>(null)
+const progressBarEl = ref<HTMLElement | null>(null)
 const playing = ref(false)
 const expanded = ref(false)
 const currentTime = ref(0)
 const duration = ref(0)
-const noSrc = ref(false)
+const errorMessage = ref('将 `spring-snow.mp3` 放到 `public/music/` 后即可启用真实播放。')
 
-const progressPct = computed(() =>
-  duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
-)
+const progressPct = computed(() => (duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0))
 
-function togglePlay() {
-  const el = audioEl.value
-  if (!el) return
+async function togglePlay() {
+  const element = audioEl.value
+  if (!element) return
+
   if (playing.value) {
-    el.pause()
+    element.pause()
+    return
+  }
+
+  try {
+    await element.play()
+    errorMessage.value = ''
+  } catch {
     playing.value = false
-  } else {
-    el.play().then(() => {
-      playing.value = true
-      noSrc.value = false
-      if (!duration.value && el.duration) duration.value = el.duration
-    }).catch(() => {
-      noSrc.value = true
-      playing.value = false
-    })
+    errorMessage.value = '浏览器阻止了自动播放，请再次点击 PLAY。'
   }
 }
 
+function onLoadedMetadata() {
+  if (!audioEl.value) return
+  duration.value = Number.isFinite(audioEl.value.duration) ? audioEl.value.duration : 0
+}
+
 function onTimeUpdate() {
-  const el = audioEl.value
-  if (!el) return
-  currentTime.value = el.currentTime
-  if (!duration.value && el.duration) duration.value = el.duration
+  if (!audioEl.value) return
+  currentTime.value = audioEl.value.currentTime
 }
 
 function onEnded() {
@@ -88,90 +97,247 @@ function onEnded() {
   currentTime.value = 0
 }
 
-function seek(e: MouseEvent) {
-  const el = audioEl.value
-  if (!el || !duration.value) return
-  const bar = (e.currentTarget as HTMLElement).querySelector('.mp-bar') as HTMLElement
-  const rect = bar.getBoundingClientRect()
-  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-  el.currentTime = ratio * duration.value
+function onError() {
+  errorMessage.value = '未找到音频文件，请添加 `public/music/spring-snow.mp3`。'
 }
 
-function formatTime(sec: number): string {
-  if (!sec || isNaN(sec)) return '0:00'
-  const m = Math.floor(sec / 60)
-  const s = Math.floor(sec % 60).toString().padStart(2, '0')
-  return `${m}:${s}`
+function seek(event: MouseEvent) {
+  const element = audioEl.value
+  const bar = progressBarEl.value
+  if (!element || !bar || !duration.value) return
+
+  const rect = bar.getBoundingClientRect()
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+  element.currentTime = ratio * duration.value
+  currentTime.value = element.currentTime
 }
+
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00'
+  const minutes = Math.floor(seconds / 60)
+  const remain = Math.floor(seconds % 60)
+  return `${minutes}:${remain.toString().padStart(2, '0')}`
+}
+
+onUnmounted(() => {
+  if (!audioEl.value) return
+  audioEl.value.pause()
+  audioEl.value.currentTime = 0
+})
 </script>
 
 <style lang="scss" scoped>
 .music-player {
-  position: fixed; right: 24px; bottom: 24px; z-index: 999;
-  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
+
 .mp-toggle {
-  width: 44px; height: 44px; border-radius: 50%;
+  min-width: 76px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 245, 255, 0.4);
   background: linear-gradient(135deg, #00f5ff, #7b2fff);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; cursor: pointer;
-  box-shadow: 0 0 20px rgba(0,245,255,.4);
-  transition: transform .2s;
-  &:hover { transform: scale(1.1); }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  letter-spacing: 1.8px;
+  color: #04111f;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #00f5ff;
+    outline-offset: 2px;
+  }
 }
+
 .mp-body {
-  background: rgba(6,12,20,.95);
-  border: 1px solid rgba(0,245,255,.2);
+  background: rgba(6, 12, 20, 0.95);
+  border: 1px solid rgba(0, 245, 255, 0.2);
   backdrop-filter: blur(12px);
-  width: 240px;
-  clip-path: polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
-  max-height: 0; overflow: hidden; opacity: 0;
-  transition: max-height .35s ease, opacity .3s ease;
-  .music-player.expanded & { max-height: 160px; opacity: 1; }
+  width: 260px;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+
+  .music-player.expanded & {
+    max-height: 190px;
+    opacity: 1;
+  }
 }
+
 .mp-top {
-  display: flex; align-items: center; gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 14px 16px 8px;
 }
+
 .mp-disc {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-  background: #0f1e34; border: 2px solid rgba(0,245,255,.3);
-  display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
-  &.spinning { animation: spin 4s linear infinite; }
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #0f1e34;
+  border: 2px solid rgba(0, 245, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-family: 'Orbitron', monospace;
+  color: #00f5ff;
+
+  &.spinning {
+    animation: spin 4s linear infinite;
+  }
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-.mp-info { flex: 1; min-width: 0; }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mp-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .mp-title {
-  font-family: 'Orbitron', monospace; font-size: .7rem;
-  color: #eaf4ff; letter-spacing: 1px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  color: #eaf4ff;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.mp-artist { font-size: .62rem; color: #00f5ff; margin-top: 2px; }
+
+.mp-artist {
+  font-size: 0.62rem;
+  color: #00f5ff;
+  margin-top: 2px;
+}
+
 .mp-btn {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-  background: rgba(0,245,255,.1); border: 1px solid rgba(0,245,255,.3);
-  color: #00f5ff; font-size: .9rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: .15s; &:hover { background: rgba(0,245,255,.25); }
+  min-width: 58px;
+  height: 32px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: rgba(0, 245, 255, 0.1);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  color: #00f5ff;
+  font-size: 0.58rem;
+  letter-spacing: 1.4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s;
+
+  &:hover {
+    background: rgba(0, 245, 255, 0.25);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #00f5ff;
+    outline-offset: 2px;
+  }
 }
+
 .mp-progress {
-  padding: 0 16px 12px; cursor: pointer;
+  padding: 0 16px 8px;
+  cursor: pointer;
 }
+
 .mp-bar {
-  height: 3px; background: rgba(0,245,255,.1); border-radius: 2px; overflow: hidden;
+  height: 3px;
+  background: rgba(0, 245, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
   margin-bottom: 4px;
 }
+
 .mp-fill {
-  height: 100%; background: linear-gradient(90deg, #00f5ff, #7b2fff);
-  border-radius: 2px; transition: width .5s linear;
+  height: 100%;
+  background: linear-gradient(90deg, #00f5ff, #7b2fff);
+  border-radius: 2px;
+  transition: width 0.2s linear;
 }
+
 .mp-times {
-  display: flex; justify-content: space-between;
-  font-size: .58rem; color: rgba(0,245,255,.4); font-family: monospace;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  color: rgba(0, 245, 255, 0.4);
+  font-family: monospace;
 }
+
+.mp-caption {
+  padding: 0 16px 2px;
+  font-size: 0.6rem;
+  color: rgba(234, 244, 255, 0.72);
+  letter-spacing: 0.8px;
+}
+
 .mp-hint {
-  padding: 0 16px 10px;
-  font-size: .6rem; color: rgba(0,245,255,.35);
-  font-family: monospace; letter-spacing: 1px;
+  padding: 0 16px 12px;
+  font-size: 0.6rem;
+  color: rgba(0, 245, 255, 0.45);
+  font-family: monospace;
+  letter-spacing: 0.6px;
+}
+
+:global(:root[data-theme='light']) {
+  .music-player .mp-body {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 119, 204, 0.18);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .music-player .mp-title,
+  .music-player .mp-caption {
+    color: #1a2332;
+  }
+
+  .music-player .mp-artist,
+  .music-player .mp-btn,
+  .music-player .mp-disc {
+    color: #0077cc;
+  }
+
+  .music-player .mp-btn {
+    background: rgba(0, 119, 204, 0.08);
+    border-color: rgba(0, 119, 204, 0.2);
+  }
+
+  .music-player .mp-btn:hover {
+    background: rgba(0, 119, 204, 0.16);
+  }
+
+  .music-player .mp-bar {
+    background: rgba(0, 119, 204, 0.12);
+  }
+
+  .music-player .mp-times,
+  .music-player .mp-hint {
+    color: rgba(0, 119, 204, 0.5);
+  }
 }
 </style>

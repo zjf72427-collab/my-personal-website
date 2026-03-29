@@ -30,6 +30,10 @@ declare module 'qrcode.vue' {
   export default QrcodeVue
 }
 
+declare module 'xgplayer'
+
+declare module 'markdown-it'
+
 // .md files imported as raw strings via ?raw suffix
 declare module '*.md?raw' {
   const content: string

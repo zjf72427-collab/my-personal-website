@@ -47,7 +47,7 @@ function initMatrix() {
 
   function draw() {
     ctx.fillStyle = 'rgba(2,4,8,0.05)'
-    ctx.fillRect(0, 0, el.width, el.height)
+    ctx.fillRect(0, 0, el!.width, el!.height)
 
     drops.forEach((drop, i) => {
       const cx = i * COL_W
@@ -77,7 +77,7 @@ function initMatrix() {
       ctx.font = '14px monospace'
       ctx.fillText(c, cx + drop.offsetX, cy)
 
-      if (cy > el.height && Math.random() > .95) drop.y = 0
+      if (cy > el!.height && Math.random() > .95) drop.y = 0
       else drop.y += drop.vy
     })
     ctx.globalAlpha = 1
@@ -123,7 +123,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 #home-bg-img {
   position: fixed; inset: 0; z-index: 0;
-  background: url('/bg.jpg') center/cover no-repeat;
+  background: url('/bg/bg1.jpg') center/cover no-repeat;
   filter: brightness(.35) saturate(1.4);
   animation: bgpulse 8s ease-in-out infinite;
 }
